@@ -7,12 +7,13 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.EditText;
+import android.widget.Toast;
 
+import com.android.volley.NetworkResponse;
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
-import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
 import com.beardedhen.androidbootstrap.BootstrapButton;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -58,20 +59,21 @@ public class AuthActivity extends ActionBarActivity implements View.OnClickListe
         final String url = "http://manturf2.herokuapp.com/api/registrations";
 
         //Request
-        StringRequest postRequest = new StringRequest(Request.Method.POST,url,
-                new Response.Listener<String>() {
-                    @Override
-                    public void onResponse(String s) {
-                        Log.i(TAG, "RESPONSE=" + s);
-                    }
-                },
-                new Response.ErrorListener(){
-                    @Override
-                    public void onErrorResponse(VolleyError error){
-                        //error
-                        Log.i(TAG,"ERROR" + error);
-                    }
-                }){
+        Request postRequest = new Request<String>(Request.Method.POST,url,new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error){
+                Log.i(TAG, String.valueOf(error));
+            }
+        })  {
+            @Override
+            protected Response<String> parseNetworkResponse(NetworkResponse response) {
+                return Response.success(new String(response.data),getCacheEntry());
+            }
+            @Override
+            protected void deliverResponse(String response) {
+                Toast.makeText(getApplication(), response,Toast.LENGTH_LONG).show();
+                Log.i(TAG, response);
+            }
             @Override
             protected Map<String,String> getParams(){
                 Map<String,String> params = new HashMap<String,String>();
@@ -81,10 +83,7 @@ public class AuthActivity extends ActionBarActivity implements View.OnClickListe
                 return params;
             }
         };
-
         queue.add(postRequest);
-
-
     }
 
     @Override
