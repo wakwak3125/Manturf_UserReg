@@ -9,20 +9,21 @@ import android.view.View;
 import android.widget.EditText;
 import android.widget.Toast;
 
-import com.android.volley.NetworkResponse;
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
+import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
 import com.beardedhen.androidbootstrap.BootstrapButton;
 import com.fasterxml.jackson.core.JsonProcessingException;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
 
-public class AuthActivity extends ActionBarActivity implements View.OnClickListener{
+public class AuthActivity extends ActionBarActivity implements View.OnClickListener {
     private static final String TAG = AuthActivity.class.getSimpleName();
 
     @Override
@@ -59,21 +60,31 @@ public class AuthActivity extends ActionBarActivity implements View.OnClickListe
         final String url = "http://manturf2.herokuapp.com/api/registrations";
 
         //Request
-        Request postRequest = new Request<String>(Request.Method.POST,url,new Response.ErrorListener() {
-            @Override
-            public void onErrorResponse(VolleyError error){
-                Log.i(TAG, String.valueOf(error));
-            }
-        })  {
-            @Override
-            protected Response<String> parseNetworkResponse(NetworkResponse response) {
-                return Response.success(new String(response.data),getCacheEntry());
-            }
-            @Override
-            protected void deliverResponse(String response) {
-                Toast.makeText(getApplication(), response,Toast.LENGTH_LONG).show();
-                Log.i(TAG, response);
-            }
+        StringRequest postRequest = new StringRequest(Request.Method.POST, url,
+                new Response.Listener<String>() {
+                    @Override
+                    public void onResponse(String s) {
+                        try {
+                            RespMsg respMsg = JsonConverter.toObject(s,RespMsg.class);
+                            Log.i(TAG,respMsg.getStatus());
+                            /*Log.i(TAG,respMsg.getPassword());*/
+                            if (respMsg.getStatus().equals("ng")){
+                                Toast.makeText(getApplication(),"まちがってるで！",Toast.LENGTH_LONG).show();
+                            }else {
+                                Toast.makeText(getApplication(),"成功や！楽しんでや！",Toast.LENGTH_LONG).show();
+                            }
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+/*                        Toast.makeText(getApplication(),"RESPONSE" + s,Toast.LENGTH_LONG).show();*/
+                    }
+                },
+                new Response.ErrorListener() {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        Toast.makeText(getApplication(),"ERROR" + error.getMessage(),Toast.LENGTH_LONG).show();
+                    }
+                }) {
             @Override
             protected Map<String,String> getParams(){
                 Map<String,String> params = new HashMap<String,String>();
